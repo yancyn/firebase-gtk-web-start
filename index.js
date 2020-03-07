@@ -42,7 +42,8 @@ const uiConfig = {
   credentialHelper: firebaseui.auth.CredentialHelper.NONE,
   signInOptions: [
     // Email / Password Provider.
-    firebase.auth.EmailAuthProvider.PROVIDER_ID
+    firebase.auth.EmailAuthProvider.PROVIDER_ID,
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID
   ],
   callbacks: {
     signInSuccessWithAuthResult: function(authResult, redirectUrl){
