@@ -24,9 +24,18 @@ var rsvpListener = null;
 var guestbookListener = null;
 
 // Add Firebase project configuration object here
-// var firebaseConfig = {};
+  var firebaseConfig = {
+    apiKey: "AIzaSyAVjxKUs_aaRR6wL8A2nfUXYpWTaRz-wCQ",
+    authDomain: "event-hangout.firebaseapp.com",
+    databaseURL: "https://event-hangout.firebaseio.com",
+    projectId: "event-hangout",
+    storageBucket: "event-hangout.appspot.com",
+    messagingSenderId: "121548083213",
+    appId: "1:121548083213:web:4fafa42d809db992330544"
+  };
 
-// firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 
 // FirebaseUI config
 const uiConfig = {
@@ -44,4 +53,62 @@ const uiConfig = {
   }
 };
 
-// const ui = new firebaseui.auth.AuthUI(firebase.auth());
+const ui = new firebaseui.auth.AuthUI(firebase.auth());
+
+// Called when the user clicks the RSVP button
+startRsvpButton.addEventListener("click",
+ () => {
+    if (firebase.auth().currentUser) {
+      // User is signed in; allows user to sign out
+      firebase.auth().signOut();
+    } else {
+      // No user is signed in; allows user to sign in
+      ui.start("#firebaseui-auth-container", uiConfig);
+    }
+});
+
+// Listen to the current Auth state
+firebase.auth().onAuthStateChanged((user) => {
+ if (user){
+   startRsvpButton.textContent = "LOGOUT";
+   // Show guestbook to logged-in users
+   guestbookContainer.style.display = "block";
+ }
+ else{
+   startRsvpButton.textContent = "RSVP";
+   // Hide guestbook for non-logged-in users
+   guestbookContainer.style.display = "none";
+ }
+});
+
+// Listen to the form submission
+form.addEventListener("submit", (e) => {
+ // Prevent the default form redirect
+ e.preventDefault();
+ // Write a new message to the database collection "guestbook"
+ firebase.firestore().collection("guestbook").add({
+   text: input.value,
+   timestamp: Date.now(),
+   name: firebase.auth().currentUser.displayName,
+   userId: firebase.auth().currentUser.uid
+ })
+ // clear message input field
+ input.value = ""; 
+ // Return false to avoid redirect
+ return false;
+});
+
+// Create query for messages
+firebase.firestore().collection("guestbook")
+.orderBy("timestamp","desc")
+.onSnapshot((snaps) => {
+ // Reset page
+ guestbook.innerHTML = "";
+ // Loop through documents in database
+ snaps.forEach((doc) => {
+   // Create an HTML entry for each document and add it to the chat
+   const entry = document.createElement("p");
+   entry.textContent = doc.data().name + ": " + doc.data().text;
+   guestbook.appendChild(entry);
+ });
+});
